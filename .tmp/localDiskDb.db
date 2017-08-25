@@ -1,0 +1,192 @@
+{
+  "data": {
+    "user": [
+      {
+        "email": "same12@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$lQ/XkfuBN54QtF0B1V5Aeu2JXYISaW0onePWKu.h31E0bFxqJ45k2",
+        "userBTCAddress": "msXHdqbL5f29Rxj4h16wh1SUAyHHLhQqm1",
+        "userBCHAddress": "n36cwLFr1jYz5o4rS3TCHeiNbgvQ5CPmSw",
+        "BTCbalance": 0,
+        "BCHbalance": 8.8908729,
+        "verifyEmail": true,
+        "encryptedPassword": "$2a$10$QfsdGXTuFVKB6qFwSUXi4eibIrTs/XtV2ifn4eJOwQbEloplzVBp6",
+        "id": 1
+      },
+      {
+        "email": "same11@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$n/IjQ2jaAT2YyipOupnmku9WKJM4buLmwUgr61NAFR0qC7avFMUfa",
+        "userBTCAddress": "n24SjZFp8jorcPW7nHEGQiWnCUiCCh4qMf",
+        "userBCHAddress": "mmoztxiYUH8X7QiemTQAq2aTjZMi2Zy3kX",
+        "BTCbalance": 0.07027029,
+        "BCHbalance": 0.00297753,
+        "verifyEmail": true,
+        "encryptedPassword": "$2a$10$aonmsAFS.pv7mH71gogEQuR8oxIvanXMKwCepOOCZzWlWmCPO4BVm",
+        "id": 2
+      },
+      {
+        "email": "test@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$Yf3GUKd2/qjGj2SOPm3QKeuNxgQZTY1KdM0z.CHU9e8V6SEEgbg4.",
+        "userBTCAddress": "mtPUs2rnjtsYWCT7z3LCUnaSvb7rKjFfgz",
+        "userBCHAddress": "muJKpK2ZhxogbKSBVZ8Bt821TpkCgGSZXY",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$5i3IHhOHfJp0SrqvPz2mTOZn57cDlzuJeLZDBAfxGcknD4SjNpNl.",
+        "id": 3
+      },
+      {
+        "email": "test1@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$pWepslExOp2RU9ZnLF.lwOLSw0.I/bDv/RM9FsP38mUup/n5QrC1S",
+        "userBTCAddress": "mrsJgdLLs43xv8G3zjH2rdBMugDS5jKQM6",
+        "userBCHAddress": "n1Ey2T8n4Mp2twmKETXsGJkVX9DbCYLr6V",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$Cnfy6Awih/x2gG5XHFdqQ.wxZTfcxIIOxysG3NvcKkqNZZSoCz2zq",
+        "id": 4
+      },
+      {
+        "email": "pankaj123@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$VRd0KPlPnyb8SjIzEY1qiOX32aQKWg/2VVwiLxJu0PdmfxioUbOFm",
+        "userBTCAddress": "mqxvMKMUeus1nqojC9FZSogSNiqXPfBcXG",
+        "userBCHAddress": "n1DgfjTgswBTaaoiAZMBcdyWQDvUdyS5nk",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$GYlTLWMUn7FbLFSVH//RDesWN4FEOmyx.AHp1vO3JOpFHd2/M5IhW",
+        "id": 5
+      },
+      {
+        "email": "rahul@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$kBPUTYxLhlP0BImotDEeMuBOHkJcZJl.lZjiQ3VNu0.h7htPoPX6i",
+        "userBTCAddress": "mpWBbGfCd4vF13pCFkbztsnXmk3zRJaUQd",
+        "userBCHAddress": "n4P96JxB7wqn3FBgvaLdRNVUiTGScqNEYo",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$TLD2HDkt/QyODTf894iq5uTZwkaFckq.2UGjaqFooInnJ.tbIYopq",
+        "id": 6
+      },
+      {
+        "email": "testing@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$badbx28Uqv2YbOCGf14qbO1P2VUHVB0kEw/YdpWquSjVoD8WNG5vu",
+        "userBTCAddress": "miHAdvmKR8JtkY6TNoJYiE7qrHt9fdk4zt",
+        "userBCHAddress": "my3N1eYdjh1FhzpBGtqzDnyqiNPpQzwnXd",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$mD9a8QAmEousRQaqLUjfG.zYZ4V9/kro3/ki.zgUnDKrh0IRfnNf.",
+        "id": 7
+      },
+      {
+        "email": "test987@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$nGYJ/u80Q/t3nd1maBQAne1F1Hkkp6NEicz7RQPhPTu6BpoLZorFG",
+        "userBTCAddress": "mhBEBzqMRDzT5kV57g6XpjuQYwzpF4ubar",
+        "userBCHAddress": "mnGPhaKgBscMeAPwTAoSUVu3cvHjydWgez",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$5He8jNmH76kSqNHvPylDkOZNeklL0alfHhoM3tY0OqnA21SoCW/76",
+        "id": 8
+      },
+      {
+        "email": "test9876@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$fgDDNCxGuhfmoV1pBK4wZ.xYbeJMZqOS.OCoaDQ8kO2f31SQtvzP6",
+        "userBTCAddress": "mtzTCkuu1vFAB26kgvXUtTCfoA1Vzg438q",
+        "userBCHAddress": "mkrc29QuTcuJq5rMtxBkxQJXr6C5JjkuUi",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$A0L0WWtADvxwSl6yN9Lwz.uuXWRD8jPiHCPmkO/zV8O8yqDXkQGrK",
+        "id": 9
+      },
+      {
+        "email": "penny121@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$XJmcBAZE67d6f1BVGYtHpeyrfXjQ1IvhMGHfzh4WyYuL1bbIyadMe",
+        "userBTCAddress": "n1Ek7UBW2D8pgwFcwcXCVGXEYGNtAGjRqh",
+        "userBCHAddress": "mxDLgaW5vavgagH5WcpLQQRqgNg6aKmdhy",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$oArhcWwdD2d7n7faNjlWlOxTsSzHrb9naojRgkbWxWRxYHb5HTkCu",
+        "id": 10
+      },
+      {
+        "email": "penny1211@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$M3DenC39UE0DZTOMTEDPVuWyHPY8i/bb0PeGnUyDcfty0UUdbt/vy",
+        "userBTCAddress": "myoPMp74Xr5953nbdf2oWRkiJgJ8pEd9qy",
+        "userBCHAddress": "mqeZaLntbcJjwpnhDLZNzCLF6b5wmvHmei",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$5IHZnZeJMnfBRLcUIm8/dO/9JVnMtIGV531lFrODvmcYGx08l3inW",
+        "id": 11
+      }
+    ],
+    "transaction": []
+  },
+  "schema": {
+    "user": {
+      "email": {
+        "type": "string",
+        "unique": true
+      },
+      "BTCbalance": {
+        "type": "float",
+        "defaultsTo": 0
+      },
+      "BCHbalance": {
+        "type": "float",
+        "defaultsTo": 0
+      },
+      "userBCHAddress": {
+        "type": "string"
+      },
+      "userBTCAddress": {
+        "type": "string"
+      },
+      "encryptedPassword": {
+        "type": "string"
+      },
+      "encryptedSpendingpassword": {
+        "type": "string"
+      },
+      "verifyEmail": {
+        "type": "boolean",
+        "defaultsTo": false
+      },
+      "id": {
+        "type": "integer",
+        "autoIncrement": true,
+        "primaryKey": true,
+        "unique": true
+      }
+    },
+    "transaction": {
+      "fromUserId": {
+        "type": "string"
+      },
+      "transactionAmount": {
+        "type": "float"
+      },
+      "transactionType": {
+        "type": "string"
+      },
+      "priceAcceptByUser": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer",
+        "autoIncrement": true,
+        "primaryKey": true,
+        "unique": true
+      }
+    }
+  },
+  "counters": {
+    "user": {
+      "id": 11
+    },
+    "transaction": {}
+  }
+}

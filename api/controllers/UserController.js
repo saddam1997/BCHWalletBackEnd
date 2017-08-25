@@ -7,6 +7,7 @@
 var bitcoinBTC = require('bitcoin');
 var bitcoinBCH = require('bitcoin');
 var bcrypt = require('bcrypt');
+var nodemailer = require('nodemailer');
 var clientBTC = new bitcoinBTC.Client({
   host: 'localhost',
   port: 8332,
@@ -14,7 +15,6 @@ var clientBTC = new bitcoinBTC.Client({
   pass: 'test',
   timeout: 30000
 });
-
 var clientBCH = new bitcoinBCH.Client({
   host: 'localhost',
   port: 8332,
@@ -23,10 +23,9 @@ var clientBCH = new bitcoinBCH.Client({
   timeout: 30000
 });
 module.exports = {
-
   createNewUser: function(req, res) {
     console.log(req.body.email + " Creating new address ..................... " + JSON.stringify(req.body));
-    if (!req.body.password || !req.body.confirmPassword || !req.body.email|| !req.body.spendingpassword) {
+    if (!req.body.password || !req.body.confirmPassword || !req.body.email || !req.body.spendingpassword) {
       return res.json(500, {
         err: 'user details required!'
       });
@@ -90,434 +89,574 @@ module.exports = {
       }
     });
   },
-  sendAmountToAddressApi: function(req, res, next) {
-    console.log("sendToAddressApi called.........");
-    var client = new bitcoin.Client({
-      host: 'localhost',
-      port: 8332,
-      user: 'test',
-      pass: 'test',
-      timeout: 30000
-    });
-    var batch = [];
-    for (var i = 0; i < 1; ++i) {
-      batch.push({
-        method: 'sendtoaddress',
-        params: [req.param('recieverAddress'),
-          req.param('amount'),
-          req.param('commentForSender'),
-          req.param('commentForReciever')
-        ]
-      });
-    }
-    client.cmd(batch, function(err, transactionDetails, resHeaders) {
-      if (err) return res.serverError(err);
-
-      console.log("transactionDetails::: " + transactionDetails);
-
-    });
-  },
-  sendAmountToUser: function(req, res, next) {
-    console.log("Enter into sendAmountToUser with ::: " + JSON.stringify(req.body));
-    if (parseInt(req.body.amount) <= 0) {
-      return res.json(200, {
+  sendBTCCoinByUserWithFee: function(req, res, next) {
+    console.log("Enter into sendBTCCoinByUserWithFee with ::: " + JSON.stringify(req.body));
+    if (parseFloat(req.body.amount).toFixed(8) <= 0.0001) {
+      console.log("amount in not less the zero............");
+      return res.json(400, {
         "message": "Amount not less then zero"
       });
     }
+
     User.findOne({
-      email: req.body.fromUserId
-    }).exec(function(err, fromUserDetails) {
-      if (err) {
-        return res.serverError(err);
-      }
-      if (parseInt(req.body.amount) > parseInt(fromUserDetails.BTCbalance)) {
-        return res.json(200, {
-          "message": "Amount Exceed"
-        });
-      }
-      console.log("FromUserDetails::: " + JSON.stringify(fromUserDetails));
-      User.findOne({
-        email: req.body.toUserId
-      }).exec(function(err1, toUserDetails) {
+        email: req.body.userMailId
+      })
+      .exec(function(err, userDetails) {
         if (err) {
-          return res.serverError(err1);
+          console.log("Error to get userDetails.................");
+          return res.serverError(err);
         }
+        console.log("UserAMount in database ::: " + userDetails.BTCbalance);
+        console.log("req.body.amount ::: " + parseFloat(req.body.amount).toFixed(8));
 
-        var senderUpdatedBalance = fromUserDetails.BTCbalance - parseInt(req.body.amount);
-        var recieverUpdatedBalance = toUserDetails.BTCbalance + parseInt(req.body.amount);
-        User.update({
-            email: req.body.fromUserId
-          }, {
-            BTCbalance: senderUpdatedBalance
-          })
-          .exec(function(err, updatedSendUser) {
-            if (err) {
-              return res.serverError(err);
-            }
-            User.update({
-                email: req.body.toUserId
-              }, {
-                BTCbalance: recieverUpdatedBalance
-              })
-              .exec(function(err, updatedRecieveUser) {
-                if (err) {
-                  return res.serverError(err);
-                }
-                return res.json({
-                  "updatedSendUser": updatedSendUser,
-                  "updatedRecieveUser": updatedRecieveUser
-                });
-              });
-          });
-
-      });
-
-    });
-  },
-//Parameter {userMailId,amount,spendingPassword}
-//method{
-//   deduct from BTCbalance
-//   add in BCHBalance
-// }
-
-  buyBCHCoinByUser: function(req, res, next) {
-    console.log(parseFloat((22/7).toFixed(8)) +" Enter into buyBCHCoinByUser with ::: " + JSON.stringify(req.body));
-    if (parseInt(req.body.amount) <= 0) {
-      return res.json(200, {
-        "message": "Amount not less then zero"
-      });
-    }
-    User.findOne({
-      email: req.body.userMailId
-    })
-    .exec(function(err, userDetails) {
-      if (err) {
-        return res.serverError(err);
-      }
-      if (parseInt(req.body.amount) > parseInt(userDetails.BTCbalance)) {
-        return res.json(200, {
-          "message": "Amount Exceed"
-        });
-      }
-      User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
-        if (err) {
-          console.log("inside.comparePassword.. findOne.authenticated called.........");
-          return res.json(403, {
-            err: 'forbidden'
+        if (parseFloat(req.body.amount).toFixed(8) > parseFloat(userDetails.BTCbalance).toFixed(8)) {
+          console.log(parseFloat(req.body.amount).toFixed(8) + " Amount Exceed " + userDetails.BTCbalance);
+          return res.json(400, {
+            "message": "Amount Exceed"
           });
         }
-        if (!valid) {
-          return res.json(401, {
-            err: 'invalid  spendingpassword'
-          });
-        } else {
+        User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
+          if (err) {
+            console.log("inside.comparePassword.. findOne.authenticated called.........");
+            return res.json(403, {
+              err: 'forbidden'
+            });
+          }
+          if (!valid) {
+            return res.json(401, {
+              err: 'invalid  spendingpassword'
+            });
+          } else {
 
-            console.log("User spendingpassword is valid..............."+parseFloat((22/7).toFixed(8)));
-            //msCPbFdzHqdtsdKrwSvzech74hruZteGji company BTC address
-            //req.body.amount Amount to send to user
-            //req.body.commentForSender
-            //req.body.commentForReciever
-            clientBTC.cmd(
-               'sendfrom',
-               req.body.userMailId,
-               "msCPbFdzHqdtsdKrwSvzech74hruZteGji",
-               req.body.amount,
-               3,
-               req.body.commentForReciever,
-               req.body.commentForSender,
-              function(err, TransactionDetails , resHeaders) {
-                if (err) return console.log(err);
-
-                console.log('TransactionDetails :', TransactionDetails);
-                // return res.json(200, {
-                //     "TransactionDetails": TransactionDetails
-                //   });
-
-                //"ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG", company bch account pennybch@gmail.com
-
-                clientBCH.cmd(
-                   'sendfrom',
-                   "pennybch@gmail.com",
-                   userDetails.userBCHAddress,
-                   req.body.amount,
-                   3,
-                   req.body.commentForReciever,
-                   req.body.commentForSender,
-                  function(err, TransactionDetails , resHeaders) {
-                    if (err) return console.log(err);
-
-                    console.log('TransactionDetails :', TransactionDetails);
-                    // return res.json(200, {
-                    //     "TransactionDetails": TransactionDetails
-                    //   });
-                    var updatedBTCbalance = userDetails.BTCbalance - parseInt(req.body.amount);
-                    var updatedBCHbalance = userDetails.BCHbalance + parseInt(req.body.amount);
-                    User.update({
-                        email: req.body.userMailId
-                      }, {
-                        BTCbalance: updatedBTCbalance,
-                        BCHbalance: updatedBCHbalance
-                      })
-                      .exec(function(err, updatedUser) {
-                        if (err) {
-                          return res.serverError(err);
-                        }
-                        //Call RPC ......
-
-                        return res.json({
-                          "updatedUser": updatedUser
-                        });
-                      });
-                  });
-              });
-
-        }
-      });
-
-    });
-
-  },
-  sellBCHCoinByUser: function(req, res, next) {
-
-    console.log("Enter into sellBCHCoinByUser with ::: " + JSON.stringify(req.body));
-    if (parseInt(req.body.amount) <= 0) {
-      return res.json(200, {
-        "message": "Amount not less then zero"
-      });
-    }
-    User.findOne({
-      email: req.body.userMailId
-    })
-    .exec(function(err, userDetails) {
-      if (err) {
-        return res.serverError(err);
-      }
-      if (parseInt(req.body.amount) > parseInt(userDetails.BTCbalance)) {
-        return res.json(200, {
-          "message": "Amount Exceed"
-        });
-      }
-      User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
-        if (err) {
-          console.log("inside.comparePassword.. findOne.authenticated called.........");
-          return res.json(403, {
-            err: 'forbidden'
-          });
-        }
-        if (!valid) {
-          return res.json(401, {
-            err: 'invalid  spendingpassword'
-          });
-        } else {
-            console.log("User spendingpassword is valid...............");
-            //ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG company BCH address
-            //req.body.amount Amount to send to user
-            //req.body.commentForSender
-            //req.body.commentForReciever
-            clientBCH.cmd(
-               'sendfrom',
-               req.body.userMailId,
-               "ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG",
-               req.body.amount,
-               3,
-               req.body.commentForReciever,
-               req.body.commentForSender,
-              function(err, TransactionDetails , resHeaders) {
-                if (err) return console.log(err);
-
-                console.log('TransactionDetails :', TransactionDetails);
-                // return res.json(200, {
-                //     "TransactionDetails": TransactionDetails
-                //   });clientBCH
-
-                //"msCPbFdzHqdtsdKrwSvzech74hruZteGji ", company btc account penny@gmail.com
-
-                clientBTC.cmd(
-                   'sendfrom',
-                   "pennybch@gmail.com",
-                   userDetails.userBCHAddress,
-                   req.body.amount,
-                   3,
-                   req.body.commentForReciever,
-                   req.body.commentForSender,
-                  function(err, TransactionDetails , resHeaders) {
-                    if (err) return console.log(err);
-
-                    console.log('TransactionDetails :', TransactionDetails);
-                    // return res.json(200, {
-                    //     "TransactionDetails": TransactionDetails
-                    //   });
-                    var updatedBTCbalance = userDetails.BTCbalance + parseInt(req.body.amount);
-                    var updatedBCHbalance = userDetails.BCHbalance - parseInt(req.body.amount);
-                    User.update({
-                        email: req.body.userMailId
-                      }, {
-                        BTCbalance: updatedBTCbalance,
-                        BCHbalance: updatedBCHbalance
-                      })
-                      .exec(function(err, updatedUser) {
-                        if (err) {
-                          return res.serverError(err);
-                        }
-                        return res.json({
-                          "updatedUser": updatedUser
-                        });
-                      });
-                  });
-              });
-
-
-
-        }
-      });
-    });
-  },
-  sendBCHCoinByUser: function(req, res, next) {
-    console.log("Enter into sendBCHCoinByUser with ::: " + JSON.stringify(req.body));
-    if (parseInt(req.body.amount) <= 0) {
-      return res.json(200, {
-        "message": "Amount not less then zero"
-      });
-    }
-    User.findOne({
-      email: req.body.userMailId
-    })
-    .exec(function(err, userDetails) {
-      if (err) {
-        return res.serverError(err);
-      }
-      if (parseInt(req.body.amount) > parseInt(userDetails.BCHbalance)) {
-        return res.json(200, {
-          "message": "Amount Exceed"
-        });
-      }
-      User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
-        if (err) {
-          console.log("inside.comparePassword.. findOne.authenticated called.........");
-          return res.json(403, {
-            err: 'forbidden'
-          });
-        }
-        if (!valid) {
-          return res.json(401, {
-            err: 'invalid  spendingpassword'
-          });
-        } else {
-            console.log("User spendingpassword is valid...............");
-            //"ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG", company bch account pennybch@gmail.com
-
-            clientBCH.cmd(
-               'sendfrom',
-               userDetails.email,
-               req.body.recieverAddress,
-               req.body.amount,
-               3,
-               req.body.commentForReciever,
-               req.body.commentForSender,
-              function(err, TransactionDetails , resHeaders) {
-                if (err) return console.log(err);
-
-                console.log('TransactionDetails :', TransactionDetails);
-                // return res.json(200, {
-                //     "TransactionDetails": TransactionDetails
-                //   });
-                var updatedBCHbalance = userDetails.BCHbalance - parseInt(req.body.amount);
-                User.update({
-                    email: req.body.userMailId
-                  }, {
-                    BCHbalance: updatedBCHbalance
-                  })
-                  .exec(function(err, updatedUser) {
-                    if (err) {
-                      return res.serverError(err);
-                    }
-                    console.log("User balance Update Successfully............");
-                    //call RPC call from here..............recieverAddress of BCH
-                    return res.json({
-                      "updatedUser": updatedUser
-                    });
-                  });
-              });
-          });
-
-        }
-      });
-    });
-  },
-  sendBTCCoinByUser: function(req, res, next) {
-    console.log("Enter into sendBTCCoinByUser with ::: " + JSON.stringify(req.body));
-    if (parseInt(req.body.amount) <= 0) {
-      return res.json(200, {
-        "message": "Amount not less then zero"
-      });
-    }
-    User.findOne({
-      email: req.body.userMailId
-    })
-    .exec(function(err, userDetails) {
-      if (err) {
-        return res.serverError(err);
-      }
-      if (parseInt(req.body.amount) > parseInt(userDetails.BTCbalance)) {
-        return res.json(200, {
-          "message": "Amount Exceed"
-        });
-      }
-      User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
-        if (err) {
-          console.log("inside.comparePassword.. findOne.authenticated called.........");
-          return res.json(403, {
-            err: 'forbidden'
-          });
-        }
-        if (!valid) {
-          return res.json(401, {
-            err: 'invalid  spendingpassword'
-          });
-        } else {
-            console.log("User spendingpassword is valid...............");
+            console.log(" ::User spendingpassword is valid..............." + JSON.stringify(req.body.userMailId));
             clientBTC.cmd('sendfrom',
-              userDetails.email,
-              req.body.recieverAddress,
-               req.body.amount,
-               3,
-               req.body.commentForReciever,
-               req.body.commentForSender,
-              function(err, TransactionDetails , resHeaders) {
+              req.body.userMailId,
+              req.body.recieverBTCCoinAddress,
+              req.body.amount,
+              3,
+              req.body.commentForReciever,
+              req.body.commentForSender,
+              function(err, TransactionDetails, resHeaders) {
+                console.log(" Error to send BTC to server .....");
                 if (err) return console.log(err);
-
                 console.log('TransactionDetails :', TransactionDetails);
-                // return res.json(200, {
-                //     "TransactionDetails": TransactionDetails
-                //   });
-                var updatedBTCbalance = userDetails.BTCbalance - parseInt(req.body.amount);
-                User.update({
+                console.log("User balance :: " + userDetails.BTCbalance);
+                console.log("req.body.amount balance :: " + req.body.amount);
+                clientBTC.cmd('gettransaction', TransactionDetails,
+                  function(err, compleateTransactionDetails, resHeaders) {
+                    if (err) return console.log(err);
+                    console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionDetails.fee)).toFixed(8));
+
+                    var updatedBTCbalance = (parseFloat(userDetails.BTCbalance).toFixed(8) -
+                      parseFloat(req.body.amount).toFixed(8));
+                    updatedBTCbalance = updatedBTCbalance - parseFloat(Math.abs(compleateTransactionDetails.fee)).toFixed(8);
+
+                    User.update({
+                        email: req.body.userMailId
+                      }, {
+                        BTCbalance: updatedBTCbalance
+                      })
+                      .exec(function(err, updatedUser) {
+                        if (err) {
+                          return res.serverError(err);
+                        }
+                        //RPC User .................recieverAddress of BTC
+                        User
+                          .findOne({
+                            email: req.body.userMailId
+                          })
+                          .populateAll()
+                          .then(function(user) {
+                            console.log("User return "+JSON.stringify(user));
+                            res.json({
+                              user: user
+                            });
+                          })
+                          .catch(function(err) {
+                            if (err) return res.serverError(err);
+                          });
+                        // console.log("updatedUser balance :: " + JSON.stringify(updatedUser.BTCbalance));
+                        // return res.json({
+                        //   "user": updatedUser
+                        // });
+                      });
+
+                  });
+
+
+              });
+          }
+        });
+      });
+
+  },
+  sendBCHCoinByUserWithFee: function(req, res, next) {
+    console.log("Enter into sendBCHCoinByUserWithFee with ::: " + JSON.stringify(req.body));
+    if (parseFloat(req.body.amount).toFixed(8) <= 0.0001) {
+      console.log("amount in not less the zero............");
+      return res.json(400, {
+        "message": "Amount not less then zero"
+      });
+    }
+
+    User.findOne({
+        email: req.body.userMailId
+      })
+      .exec(function(err, userDetails) {
+        if (err) {
+          console.log("Error to get userDetails.................");
+          return res.serverError(err);
+        }
+        console.log("UserAMount in database ::: " + userDetails.BCHbalance);
+        console.log("req.body.amount ::: " + parseFloat(req.body.amount).toFixed(8));
+
+        if (parseFloat(req.body.amount).toFixed(8) > parseFloat(userDetails.BCHbalance).toFixed(8)) {
+          console.log(parseFloat(req.body.amount).toFixed(8) + " Amount Exceed " + userDetails.BCHbalance);
+          return res.json(400, {
+            "message": "Amount Exceed"
+          });
+        }
+        User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
+          if (err) {
+            console.log("inside.comparePassword.. findOne.authenticated called.........");
+            return res.json(403, {
+              err: 'forbidden'
+            });
+          }
+          if (!valid) {
+            return res.json(401, {
+              err: 'invalid  spendingpassword'
+            });
+          } else {
+
+            console.log(" ::User spendingpassword is valid..............." + JSON.stringify(req.body.userMailId));
+            clientBCH.cmd('sendfrom',
+              req.body.userMailId,
+              req.body.recieverBCHCoinAddress,
+              req.body.amount,
+              3,
+              req.body.commentForReciever,
+              req.body.commentForSender,
+              function(err, TransactionDetails, resHeaders) {
+                if (err) return console.log(err);
+                console.log('TransactionDetails :', TransactionDetails);
+                console.log("User balance :: " + userDetails.BCHbalance);
+                console.log("req.body.amount balance :: " + req.body.amount);
+                clientBCH.cmd('gettransaction', TransactionDetails,
+                  function(err, compleateTransactionDetails, resHeaders) {
+                    if (err) return console.log(err);
+
+                    console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionDetails.fee)).toFixed(8));
+
+                    var updatedBCHbalance = (parseFloat(userDetails.BCHbalance).toFixed(8) -
+                      parseFloat(req.body.amount).toFixed(8));
+                    updatedBCHbalance = updatedBCHbalance - parseFloat(Math.abs(compleateTransactionDetails.fee)).toFixed(8);
+
+                    User.update({
+                        email: req.body.userMailId
+                      }, {
+                        BCHbalance: updatedBCHbalance
+                      })
+                      .exec(function(err, updatedUser) {
+                        if (err) {
+                          return res.serverError(err);
+                        }
+                        User
+                          .findOne({
+                            email: req.body.userMailId
+                          })
+                          .populateAll()
+                          .then(function(user) {
+                            console.log("User return "+JSON.stringify(user));
+                            res.json({
+                              user: user
+                            });
+                          })
+                          .catch(function(err) {
+                            if (err) return res.serverError(err);
+                          });
+                        //RPC User .................recieverAddress of BCH
+                        // console.log("updatedUser balance :: " + JSON.stringify(updatedUser));
+                        // return res.json({
+                        //   "user": updatedUser
+                        // });
+                      });
+
+                  });
+
+
+              });
+          }
+        });
+      });
+
+  },
+  sellBCHCoinByUserWithFee: function(req, res, next) {
+    console.log("Enter into sendBCHCoinByUserWithFee with ::: " + JSON.stringify(req.body));
+    if (parseFloat(req.body.amount).toFixed(8) <= 0.0001) {
+      console.log("amount in not less the zero............");
+      return res.json(400, {
+        "message": "Amount not less then zero"
+      });
+    }
+    User.findOne({
+        email: req.body.userMailId
+      })
+      .exec(function(err, userDetails) {
+        if (err) {
+          console.log("Error to get userDetails.................");
+          return res.serverError(err);
+        }
+        console.log("UserAMount in database ::: " + userDetails.BCHbalance);
+        console.log("req.body.amount ::: " + parseFloat(req.body.amount).toFixed(8));
+
+        if (parseFloat(req.body.amount).toFixed(8) > parseFloat(userDetails.BCHbalance).toFixed(8)) {
+          console.log(parseFloat(req.body.amount).toFixed(8) + " Amount Exceed " + userDetails.BCHbalance);
+          return res.json(400, {
+            "message": "Amount Exceed"
+          });
+        }
+        User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
+          if (err) {
+            console.log("inside.comparePassword.. findOne.authenticated called.........");
+            return res.json(403, {
+              err: 'forbidden'
+            });
+          }
+          if (!valid) {
+            return res.json(401, {
+              err: 'invalid  spendingpassword'
+            });
+          } else {
+
+            var companyBTCAccountAddress="muWUXrJiKp28J3SCZ2KuGXHfBvYJZPVjY5";
+            var companyBTCAccount="pennybaseBTC@gmail.com";
+            var companyBCHAccount="pennybch@gmail.com";
+            var companyBCHAccountAddress="ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG";
+            console.log("User spendingpassword is valid..............." + JSON.stringify(req.body.userMailId));
+            //SendFrom for UsermailId to companyBCHAccountAddress
+            clientBCH.cmd('sendfrom',
+              req.body.userMailId,
+              companyBCHAccountAddress,
+              parseFloat(req.body.amount).toFixed(8),
+              3,
+              req.body.commentForReciever,
+              req.body.commentForSender,
+              function(err, TransactionBCHTxId, resHeaders) {
+                if (err) return console.log(err);
+                console.log('UserMailid To Company Mailid Succesfully txid : ', TransactionBCHTxId);
+                console.log("User BCH balance :: " + userDetails.BCHbalance);
+                console.log("Amount send by user :: " + req.body.amount);
+                //GetTransaction Fees for BCHTransaction
+                clientBCH.cmd('gettransaction', TransactionBCHTxId,
+                  function(err, compleateTransactionBCHDetails, resHeaders) {
+                    if (err) return console.log(err);
+
+                    console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionBCHDetails.fee)).toFixed(8));
+                    var updatedBCHbalance = (parseFloat(userDetails.BCHbalance).toFixed(8) - parseFloat(req.body.amount).toFixed(8));
+                    updatedBCHbalance = updatedBCHbalance - parseFloat(Math.abs(compleateTransactionBCHDetails.fee)).toFixed(8);
+                    //SendFrom for companyBTCAccount to userBTCAddress
+
+                    clientBTC.cmd('sendfrom',
+                      companyBTCAccount,
+                      userDetails.userBTCAddress,
+                      req.body.amount,
+                      3,
+                      req.body.commentForSender,
+                      req.body.commentForReciever,
+                      function(err, TransactionBTCTxId, resHeaders) {
+                        if (err) return console.log(err);
+                        console.log('TransactionDetails :', TransactionBTCTxId);
+                        console.log("User balance :: " + userDetails.BCHbalance);
+                        console.log("req.body.amount balance :: " + req.body.amount);
+                        //gettransaction details using Transaction BTC
+                        clientBTC.cmd('gettransaction', TransactionBTCTxId,
+                          function(err, compleateTransactionDetailsBTC, resHeaders) {
+
+                            if (err) return console.log(err);
+                            console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionDetailsBTC.fee)).toFixed(8));
+                            console.log("UserBTC current Balance ::: "+parseFloat(userDetails.BTCbalance).toFixed(8));
+
+                            var updatedBTCbalance = (parseFloat(userDetails.BTCbalance) + parseFloat(req.body.amount)).toFixed(8);
+                            updatedBTCbalance = updatedBTCbalance - parseFloat(Math.abs(compleateTransactionDetailsBTC.fee)).toFixed(8);
+
+                            console.log("BTCBalance to Update :: "+parseFloat(updatedBTCbalance).toFixed(8));
+                            console.log("BCHBalance to Update :: "+updatedBCHbalance);
+                            User.update({
+                                email: req.body.userMailId
+                              }, {
+                                BCHbalance: updatedBCHbalance,
+                                BTCbalance: parseFloat(updatedBTCbalance).toFixed(8)
+                              })
+                              .exec(function(err, updatedUser) {
+                                if (err) {
+                                  return res.serverError(err);
+                                }
+                                //RPC User .................recieverAddress of BCH
+                                // console.log("updatedUser balance :: " + JSON.stringify(updatedUser));
+                                // return res.json({
+                                //   "user": updatedUser
+                                // });
+                                User
+                                  .findOne({
+                                    email: req.body.userMailId
+                                  })
+                                  .populateAll()
+                                  .then(function(user) {
+                                    console.log("User return "+JSON.stringify(user));
+                                    res.json({
+                                      user: user
+                                    });
+                                  })
+                                  .catch(function(err) {
+                                    if (err) return res.serverError(err);
+                                  });
+                              });
+                          });
+                      });
+                  });
+              });
+          }
+        });
+      });
+  },
+  buyBCHCoinByUserWithFee: function(req, res, next) {
+    console.log("Enter into sendBCHCoinByUserWithFee with ::: " + JSON.stringify(req.body));
+    if(!req.body.userMailId ||!req.body.amount ||!req.body.spendingPassword ||!req.body.commentForReciever ||!req.body.commentForSender){
+      console.log("Invalid Parameter by user.....");
+      return res.json(401, {
+        "message": "Invalid Parameter"
+      });
+    }
+    if (parseFloat(req.body.amount).toFixed(8) <= 0.0001) {
+      console.log("amount in not less the zero............");
+      return res.json(400, {
+        "message": "Amount not less then 0.0001"
+      });
+    }
+    User.findOne({
+        email: req.body.userMailId
+      })
+      .exec(function(err, userDetails) {
+        if (err) {
+          console.log("Error to get userDetails.................");
+          return res.serverError(err);
+        }
+
+        console.log("UserAMount in database ::: " + JSON.stringify(userDetails));
+        console.log("req.body.amount ::: " + parseFloat(req.body.amount).toFixed(8));
+
+        if (parseFloat(req.body.amount).toFixed(8) > parseFloat(userDetails.BTCbalance).toFixed(8)) {
+          console.log(parseFloat(req.body.amount).toFixed(8) + " Amount Exceed " + userDetails.BTCbalance);
+          return res.json(400, {
+            "message": "Amount Exceed"
+          });
+        }
+        User.compareSpendingpassword(req.body.spendingPassword, userDetails, function(err, valid) {
+          if (err) {
+            console.log("Error to Compare SpendingPassword password.........");
+            return res.json(403, {
+              err: 'forbidden'
+            });
+          }
+          if (!valid) {
+            console.log("Invalid Compare SpendingPassword password.........");
+            return res.json(401, {
+              err: 'invalid  spendingpassword'
+            });
+          } else {
+
+            var companyBTCAccountAddress="muWUXrJiKp28J3SCZ2KuGXHfBvYJZPVjY5";
+            var companyBTCAccount="pennybaseBTC@gmail.com";
+            var companyBCHAccount="pennybch@gmail.com";
+            var companyBCHAccountAddress="ms6Vmok2vgbyuCGZoawXk9GA3hzshZs7MG";
+            console.log("User spendingpassword is valid..............." + JSON.stringify(req.body.userMailId));
+            //SendFrom for UsermailId to companyBCHAccountAddress
+            clientBTC.cmd('sendfrom',
+              req.body.userMailId,
+              companyBTCAccountAddress,
+              parseFloat(req.body.amount).toFixed(8),
+              3,
+              req.body.commentForReciever,
+              req.body.commentForSender,
+              function(err, TransactionBTCTxId, resHeaders) {
+                if (err) return console.log(err);
+                console.log('UserMailid To Company Mailid Succesfully txid : ', TransactionBTCTxId);
+                console.log("User BCH balance :: " + userDetails.BCHbalance);
+                console.log("Amount send by user :: " + req.body.amount);
+                //GetTransaction Fees for BCHTransaction
+                clientBCH.cmd('gettransaction', TransactionBTCTxId,
+                  function(err, compleateTransactionBTCDetails, resHeaders) {
+                    if (err) return console.log(err);
+
+                    console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionBTCDetails.fee)).toFixed(8));
+                    var updatedBTCbalance = (parseFloat(userDetails.BTCbalance).toFixed(8) - parseFloat(req.body.amount).toFixed(8));
+                    updatedBTCbalance = updatedBTCbalance - parseFloat(Math.abs(compleateTransactionBTCDetails.fee)).toFixed(8);
+                    //SendFrom for companyBTCAccount to userBTCAddress
+
+                    clientBTC.cmd('sendfrom',
+                      companyBCHAccount,
+                      userDetails.userBCHAddress,
+                      req.body.amount,
+                      3,
+                      req.body.commentForSender,
+                      req.body.commentForReciever,
+                      function(err, TransactionBCHTxId, resHeaders) {
+                        if (err) return console.log(err);
+                        console.log('TransactionDetails :', TransactionBCHTxId);
+                        console.log("User balance :: " + userDetails.BCHbalance);
+                        console.log("req.body.amount balance :: " + req.body.amount);
+                        //gettransaction details using Transaction BTC
+                        clientBTC.cmd('gettransaction', TransactionBCHTxId,
+                          function(err, compleateTransactionDetailsBCH, resHeaders) {
+
+                            if (err) return console.log(err);
+                            console.log("Fee :: " + parseFloat(Math.abs(compleateTransactionDetailsBCH.fee)).toFixed(8));
+                            console.log("UserBTC current Balance ::: "+parseFloat(userDetails.BTCbalance).toFixed(8));
+
+                            var updatedBCHbalance = (parseFloat(userDetails.BCHbalance) + parseFloat(req.body.amount)).toFixed(8);
+                            updatedBCHbalance = updatedBCHbalance - parseFloat(Math.abs(compleateTransactionDetailsBCH.fee)).toFixed(8);
+
+                            console.log("BTCBalance to Update :: "+parseFloat(updatedBTCbalance).toFixed(8));
+                            console.log("BCHBalance to Update :: "+updatedBCHbalance);
+
+                            User.update({
+                                email: req.body.userMailId
+                              }, {
+                                BCHbalance: updatedBCHbalance,
+                                BTCbalance: updatedBTCbalance
+                              })
+                              .exec(function(err, updatedUser) {
+                                if (err) {
+                                  return res.serverError(err);
+                                }
+
+                                  User
+                                    .findOne({
+                                      email: req.body.userMailId
+                                    })
+                                    .populateAll()
+                                    .then(function(user) {
+                                      console.log("User return "+JSON.stringify(user));
+                                      res.json({
+                                        user: user
+                                      });
+                                    })
+                                    .catch(function(err) {
+                                      if (err) return res.serverError(err);
+                                    });
+                                //RPC User .................recieverAddress of BCH
+                                // console.log("updatedUser balance :: " + JSON.stringify(updatedUser));
+                                // res.json(updatedUser, 201);
+
+                              });
+                          });
+                      });
+                  });
+              });
+          }
+        });
+      });
+  },
+  getTransactionList: function(req, res, next) {
+    console.log("Enter into getTransactioList::: " + JSON.stringify(req.body));
+    if(!req.body.userMailId){
+      console.log("Invalid Parameter by user.....");
+      return res.json(401, {
+        "message": "Invalid Parameter"
+      });
+    }
+    clientBCH.cmd(
+      'listtransactions',
+      req.body.userMailId,
+      function(err, transactionList, resHeaders) {
+        if (err) return console.log(err);
+        console.log("Return Transaction List :: "+JSON.stringify(transactionList));
+        res.json(200,transactionList);
+      });
+
+  },
+  getCurrentBalance: function(req, res, next) {
+    console.log("Enter into getTransactioList::: " + JSON.stringify(req.body));
+    if(!req.body.userMailId){
+      console.log("Invalid Parameter by user.....");
+      return res.json(401, {
+        "message": "Invalid Parameter"
+      });
+
+    }
+    User
+      .findOne({
+        email: req.body.userMailId
+      })
+      .then(function(user) {
+        console.log("User return "+JSON.stringify(user));
+        console.log("UserBCH Balance ::"+user.BCHbalance);
+        clientBCH.cmd(
+          'getbalance',
+          req.body.userMailId,
+          function(err, userBCHBalanceFromServer, resHeaders) {
+            if (err) return console.log(err);
+            console.log("Return Transaction List :: "+JSON.stringify(userBCHBalanceFromServer));
+            if(parseFloat(userBCHBalanceFromServer).toFixed(8)>parseFloat(user.BCHbalance).toFixed(8)){
+              console.log("UserBalance Need to update ............");
+
+              User.update({
                   email: req.body.userMailId
                 }, {
-                  BTCbalance: updatedBTCbalance
+                  BCHbalance: userBCHBalanceFromServer
                 })
                 .exec(function(err, updatedUser) {
                   if (err) {
                     return res.serverError(err);
                   }
-                  //RPC User .................recieverAddress of BTC
-                  return res.json({
-                    "updatedUser": updatedUser
-                  });
+                  User
+                    .findOne({
+                      email: req.body.userMailId
+                    })
+                    .then(function(userUpdated) {
+                      console.log("User return "+JSON.stringify(userUpdated));
+                      res.json({
+                        user: userUpdated
+                      });
+                    })
+                    .catch(function(err) {
+                      if (err) return res.serverError(err);
+                    });
                 });
-            });
-        }
+            }else {
+              res.json({
+                "message": "No need to update"
+              });
+            }
+          });
+      })
+      .catch(function(err) {
+        if (err) return res.serverError(err);
       });
-    });
   },
-  sendAmountToUserTest: function(req, res, next) {
-    console.log("Enter into sendAmountToUser with sendfrom::: " + JSON.stringify(req.body));
-    clientBCH.cmd('sendfrom', "test@gmail.com" ,"mpk7NZnDrzbTpQFpx9ohi7WiGqQg3WXEYX", 0.00001 ,6 ,"donation" ,"seans outpost", function(err, TransactionDetails , resHeaders) {
-      if (err) return console.log(err);
-      console.log('TransactionDetails :', TransactionDetails);
-      return res.json(200, {
-          "TransactionDetails": TransactionDetails
-        });
+  sendEmailTest: function(req, res, next) {
+    console.log("Enter into sendEmailTest::: " + JSON.stringify(req.body));
+    var transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'wallet.bcc@gmail.com',
+        pass: 'boosters@123'
+      }
+    });
+    var mailOptions = {
+      from: 'wallet.bcc@gmail.com',
+      to: 'bccwalletsuport@gmail.com',
+      subject: 'Sending Email using Node.js',
+      text: 'That was easy!'
+    };
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+        res.json(200,"Message Send Succesfully");
+      }
     });
   }
 };
