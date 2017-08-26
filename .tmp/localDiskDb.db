@@ -7,7 +7,7 @@
         "userBTCAddress": "msXHdqbL5f29Rxj4h16wh1SUAyHHLhQqm1",
         "userBCHAddress": "n36cwLFr1jYz5o4rS3TCHeiNbgvQ5CPmSw",
         "BTCbalance": 0,
-        "BCHbalance": 8.8908729,
+        "BCHbalance": 8.770841540000001,
         "verifyEmail": true,
         "encryptedPassword": "$2a$10$QfsdGXTuFVKB6qFwSUXi4eibIrTs/XtV2ifn4eJOwQbEloplzVBp6",
         "id": 1
@@ -97,7 +97,7 @@
         "BTCbalance": 0,
         "BCHbalance": 0,
         "verifyEmail": false,
-        "encryptedPassword": "$2a$10$A0L0WWtADvxwSl6yN9Lwz.uuXWRD8jPiHCPmkO/zV8O8yqDXkQGrK",
+        "encryptedPassword": "584865049",
         "id": 9
       },
       {
@@ -121,6 +121,17 @@
         "verifyEmail": false,
         "encryptedPassword": "$2a$10$5IHZnZeJMnfBRLcUIm8/dO/9JVnMtIGV531lFrODvmcYGx08l3inW",
         "id": 11
+      },
+      {
+        "email": "sametest@gmail.com",
+        "encryptedSpendingpassword": "$2a$10$4FzeD5ANdxGNbEBSl9poMebHsXeoJdKmojJa5SwOaQW/Fp0uqpNZ2",
+        "userBTCAddress": "mu1WBRuKXci23wSJuAEtA76XcXEUQTBPMe",
+        "userBCHAddress": "muCQZoTH8mDgNddteHe2jXoPLhHVAVQb4w",
+        "BTCbalance": 0,
+        "BCHbalance": 0,
+        "verifyEmail": false,
+        "encryptedPassword": "$2a$10$j2oLopjqOOEzrKiC5NFExOPO.UK9zUVGxsWzqlYOmRc25TKgCDKuq",
+        "id": 12
       }
     ],
     "transaction": []
@@ -185,7 +196,7 @@
   },
   "counters": {
     "user": {
-      "id": 11
+      "id": 12
     },
     "transaction": {}
   }
